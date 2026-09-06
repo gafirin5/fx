@@ -63,12 +63,14 @@ pub const Set = struct {
     gateway: Bundle,
     codex: Bundle,
     grok: Bundle,
+    openai_compat: Bundle,
 
     pub fn select(self: Set, provider: model_provider.ProviderId) Bundle {
         return switch (provider) {
             .gateway => self.gateway,
             .codex => self.codex,
             .grok => self.grok,
+            .openai_compat => self.openai_compat,
         };
     }
 
@@ -90,6 +92,7 @@ pub const Set = struct {
             .gateway = self.gateway.deferred_usage,
             .codex = self.codex.deferred_usage,
             .grok = self.grok.deferred_usage,
+            .openai_compat = self.openai_compat.deferred_usage,
         };
     }
 };
@@ -99,6 +102,7 @@ pub fn gateway_only(gateway: Bundle) Set {
         .gateway = gateway,
         .codex = .{},
         .grok = .{},
+        .openai_compat = .{},
     };
 }
 
@@ -169,7 +173,7 @@ test "provider set selects each provider's complete route" {
         .model_catalog = .{ .context = &grok_tag, .fetch_fn = Fake.model_catalog_fetch },
         .permission_reviewer = .{ .context = &grok_tag, .review_fn = Fake.review },
     };
-    var providers = Set{ .gateway = gateway, .codex = codex, .grok = grok };
+    var providers = Set{ .gateway = gateway, .codex = codex, .grok = grok, .openai_compat = .{} };
 
     try std.testing.expect(providers.select(.gateway).agent_stream.?.context.? == @as(*anyopaque, @ptrCast(&gateway_tag)));
     try std.testing.expect(providers.select(.gateway).capabilities.fx_search);
@@ -194,6 +198,7 @@ test "provider compaction route preserves provider and credential authority" {
         .gateway = .{ .compaction_model = "openai/gpt-5.6-luna" },
         .codex = .{ .compaction_model = "gpt-5.6-luna" },
         .grok = .{ .compaction_model = "grok-4.5" },
+        .openai_compat = .{ .compaction_model = null },
     };
     const cases = [_]struct {
         provider: model_provider.ProviderId,

@@ -42,6 +42,16 @@ pub const entries = [_]Entry{
         .subscription = true,
         .login_source = .grok_subscription,
     },
+    .{
+        .id = .openai_compat,
+        .slug = "openai-compatible",
+        .aliases = &.{ "openai", "custom" },
+        .name = "OpenAI-compatible endpoint",
+        .route_name = "OpenAI-compatible endpoint",
+        .description = "Bring your own OpenAI-format API (Groq, Together AI, OpenRouter, Ollama)",
+        .subscription = false,
+        .login_source = .openai_compat_api_key,
+    },
 };
 
 pub fn parse(value: []const u8) ?model_provider.ProviderId {

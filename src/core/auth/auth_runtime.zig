@@ -2364,6 +2364,15 @@ pub const Runtime = struct {
                     probeCredentialSource,
                     loadRuntimeCredentialSource,
                 )),
+            .openai_compat => if (self.credentialSource() == .openai_compat_api_key)
+                false
+            else
+                self.selectSourceWithLoader(
+                    alloc,
+                    .openai_compat_api_key,
+                    self,
+                    loadRuntimeCredentialSource,
+                ),
         };
     }
 

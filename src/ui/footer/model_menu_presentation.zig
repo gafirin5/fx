@@ -419,6 +419,7 @@ fn loadedCatalogStatusText(state: model_cache_runtime.ModelMenuCatalogState) ?[]
             .stored_key => "Gateway catalog: authenticated with the stored API key.",
             .chatgpt_subscription => "Codex catalog: authenticated with a subscription.",
             .grok_subscription => "Grok catalog: authenticated with a subscription.",
+            .openai_compat_api_key => "OpenAI-compatible catalog: authenticated with FX_OPENAI_COMPAT_API_KEY.",
             .host_managed => "Provider catalog: authentication is managed by the host.",
         };
     }

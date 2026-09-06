@@ -64,6 +64,7 @@ pub const CatalogAuthenticatedSource = enum {
     stored_key,
     chatgpt_subscription,
     grok_subscription,
+    openai_compat_api_key,
 
     fn credentialSource(self: CatalogAuthenticatedSource) Source {
         return switch (self) {
@@ -73,6 +74,7 @@ pub const CatalogAuthenticatedSource = enum {
             .stored_key => .stored_key,
             .chatgpt_subscription => .chatgpt_subscription,
             .grok_subscription => .grok_subscription,
+            .openai_compat_api_key => .openai_compat_api_key,
         };
     }
 };
@@ -220,6 +222,7 @@ pub fn catalogAccessForCredentialAndAccount(
         .stored_key => .stored_key,
         .chatgpt_subscription => .chatgpt_subscription,
         .grok_subscription => .grok_subscription,
+        .openai_compat_api_key => .openai_compat_api_key,
         .host_managed => unreachable,
         .fx_login => blk: {
             const team = team_context orelse
@@ -255,6 +258,7 @@ pub const missing_chatgpt_credential_message = "fx needs a Codex subscription lo
 pub const missing_chatgpt_interactive_credential_message = "Codex needs a subscription login. Run /login, open Connections, then choose Codex subscription.";
 pub const missing_grok_credential_message = "fx needs a Grok subscription login for this model. Run fx login grok.";
 pub const missing_grok_interactive_credential_message = "Grok needs a subscription login. Run /login, open Connections, then choose Grok subscription.";
+pub const missing_openai_compat_credential_message = "fx needs an OpenAI-compatible endpoint for this model. Set FX_OPENAI_COMPAT_BASE_URL and FX_OPENAI_COMPAT_API_KEY, then retry.";
 pub const unreadable_store_message = "fx could not read the stored API key from " ++ stored_key_backend_label ++ ". A key may be saved but unreadable. Set FX_TRACE_LOG for the failing step, or set AI_GATEWAY_API_KEY.";
 pub const host_managed_auth_message = "Authentication is managed by the host.";
 
@@ -526,6 +530,7 @@ pub fn loadSource(
         .chatgpt_subscription => loadChatGptCredential(alloc, transport, .if_needed),
         .grok_subscription => loadGrokCredential(alloc, transport, .if_needed),
         .host_managed => null,
+        .openai_compat_api_key => loadEnvCredential(alloc, "FX_OPENAI_COMPAT_API_KEY", source),
     };
 }
 
@@ -538,6 +543,7 @@ pub fn sourceExists(
     return switch (source) {
         .vercel_oidc_token => nonEmptyEnvValue("VERCEL_OIDC_TOKEN") != null,
         .ai_gateway_api_key => nonEmptyEnvValue("AI_GATEWAY_API_KEY") != null,
+        .openai_compat_api_key => nonEmptyEnvValue("FX_OPENAI_COMPAT_API_KEY") != null,
         .fx_login => blk: {
             const loaded = oauth_session.load(alloc) catch |err| switch (err) {
                 error.OutOfMemory => return err,
@@ -593,6 +599,10 @@ pub fn sourcePresence(
         else
             .missing,
         .ai_gateway_api_key => if (nonEmptyEnvValue("AI_GATEWAY_API_KEY") != null)
+            .present
+        else
+            .missing,
+        .openai_compat_api_key => if (nonEmptyEnvValue("FX_OPENAI_COMPAT_API_KEY") != null)
             .present
         else
             .missing,
@@ -898,6 +908,7 @@ pub fn sourceLabel(source: Source) []const u8 {
         .vercel_oidc_token => "VERCEL_OIDC_TOKEN",
         .ai_gateway_api_key => "AI_GATEWAY_API_KEY",
         .fx_login => "fx login",
+        .openai_compat_api_key => "FX_OPENAI_COMPAT_API_KEY",
         .stored_key => "stored API key (" ++ stored_key_backend_label ++ ")",
         .chatgpt_subscription => "Codex subscription",
         .grok_subscription => "Grok subscription",

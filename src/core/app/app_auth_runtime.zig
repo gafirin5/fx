@@ -102,6 +102,7 @@ pub fn Runtime(comptime App: type) type {
                     .codex => .chatgpt_subscription,
                     .grok => .grok_subscription,
                     .gateway => app.auth.credentialSource() orelse .fx_login,
+                    .openai_compat => .openai_compat_api_key,
                 };
                 const route_change = app.auth.selectForProvider(app.alloc, provider) catch |err| switch (err) {
                     error.OutOfMemory => return err,
@@ -117,6 +118,8 @@ pub fn Runtime(comptime App: type) type {
                             credentials.missing_grok_interactive_credential_message
                         else if (provider == .codex)
                             credentials.missing_chatgpt_interactive_credential_message
+                        else if (provider == .openai_compat)
+                            credentials.missing_openai_compat_credential_message
                         else
                             credentials.missing_interactive_credential_message,
                     }, true);
@@ -990,6 +993,8 @@ pub fn Runtime(comptime App: type) type {
                             "Run fx login codex, then try switching again."
                         else if (target == .grok)
                             "Run fx login grok, then try switching again."
+                        else if (target == .openai_compat)
+                            "Set FX_OPENAI_COMPAT_BASE_URL and FX_OPENAI_COMPAT_API_KEY, then choose the endpoint again."
                         else
                             credentials.missing_interactive_credential_message,
                     }, true);
@@ -1540,6 +1545,7 @@ pub fn Runtime(comptime App: type) type {
                 .vercel_oidc_token,
                 .ai_gateway_api_key,
                 .stored_key,
+                .openai_compat_api_key,
                 .host_managed,
                 => {},
             }
@@ -1906,7 +1912,7 @@ test "interactive subscription sign-in rejects active and queued work before OAu
             switch (provider) {
                 .codex => try Runtime(BusySignInApp).beginChatGptSignIn(&app),
                 .grok => try Runtime(BusySignInApp).beginGrokSignIn(&app),
-                .gateway => unreachable,
+                .gateway, .openai_compat => unreachable,
             }
 
             try std.testing.expectEqual(@as(usize, 0), app.auth.start_count);

@@ -95,6 +95,9 @@ pub const CredentialSource = enum {
     chatgpt_subscription,
     grok_subscription,
     host_managed,
+    /// API key for a configured OpenAI-compatible endpoint, read from
+    /// FX_OPENAI_COMPAT_API_KEY.
+    openai_compat_api_key,
 };
 
 pub const DirectCredentialLease = struct {

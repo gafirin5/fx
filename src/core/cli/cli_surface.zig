@@ -701,6 +701,7 @@ fn runProviderLogin(alloc: Allocator, cfg: Config, provider: model_provider.Prov
         .gateway => try login_flow.runLogin(alloc, cfg.gateway_provider.oauth_transport, cfg.url_opener),
         .codex => try chatgpt_oauth.runLogin(alloc, cfg.gateway_provider.oauth_transport, cfg.url_opener),
         .grok => try grok_oauth.runLogin(alloc, cfg.gateway_provider.oauth_transport, cfg.url_opener),
+        .openai_compat => unreachable,
     }
 }
 
@@ -759,6 +760,7 @@ fn activateProviderSelectionFallible(
             .gateway => "Gateway is already selected.\n",
             .codex => "Codex is already selected.\n",
             .grok => "Grok is already selected.\n",
+            .openai_compat => "OpenAI-compatible endpoint is already selected.\n",
         });
         return true;
     }
@@ -792,6 +794,7 @@ fn activateProviderSelectionFallible(
                 .codex => "Codex credential is unavailable",
                 .grok => "Grok credential is unavailable",
                 .gateway => "configure a Gateway credential first",
+                .openai_compat => "set FX_OPENAI_COMPAT_BASE_URL and FX_OPENAI_COMPAT_API_KEY first",
             },
         );
         return false;
@@ -801,6 +804,7 @@ fn activateProviderSelectionFallible(
             .codex => "Codex model catalog is unavailable",
             .grok => "Grok model catalog is unavailable",
             .gateway => "Gateway model catalog is unavailable",
+            .openai_compat => "OpenAI-compatible model catalog is unavailable",
         });
         return false;
     };
@@ -867,13 +871,14 @@ fn activateProviderSelectionFallible(
     if (performed_login) |provider| switch (provider) {
         .codex => try writeStdout(deps, "Signed in with Codex.\n"),
         .grok => try writeStdout(deps, "Signed in with Grok.\n"),
-        .gateway => unreachable,
+        .gateway, .openai_compat => unreachable,
     };
     if (caller == .provider_command) {
         try writeStdout(deps, switch (target) {
             .gateway => "Provider set to Gateway.\n",
             .codex => "Provider set to Codex.\n",
             .grok => "Provider set to Grok.\n",
+            .openai_compat => "Provider set to OpenAI-compatible endpoint.\n",
         });
     }
     return true;
@@ -1018,6 +1023,7 @@ fn runNonInteractiveWithDeps(
                 .gateway => "Signed in to Vercel.\nAI Gateway access may still require billing or API setup for the selected account.\n",
                 .codex => "Signed in with Codex.\n",
                 .grok => "Signed in with Grok.\n",
+                .openai_compat => unreachable,
             });
             return .handled_success;
         },
@@ -1279,6 +1285,7 @@ fn runNonInteractiveWithDeps(
                     .gateway => "fx models: Gateway model catalog is unavailable\n",
                     .codex => "fx models: Codex model catalog is unavailable\n",
                     .grok => "fx models: Grok model catalog is unavailable\n",
+                    .openai_compat => "fx models: OpenAI-compatible model catalog is unavailable\n",
                 });
                 return .handled_failure;
             };

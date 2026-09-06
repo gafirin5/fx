@@ -1589,6 +1589,7 @@ fn putModelPreference(
         .gateway => "model",
         .codex => "codex_model",
         .grok => "grok_model",
+        .openai_compat => "openai_compat_model",
     };
     if (root.contains(legacy_key)) {
         _ = root.orderedRemove(legacy_key);
@@ -1834,6 +1835,10 @@ fn validateKnownSettingsObject(
         try validateModel(value.string);
     }
     if (object.get("grok_model")) |value| {
+        if (value != .string) return error.InvalidSettingsFormat;
+        try validateModel(value.string);
+    }
+    if (object.get("openai_compat_model")) |value| {
         if (value != .string) return error.InvalidSettingsFormat;
         try validateModel(value.string);
     }
